@@ -1,0 +1,16 @@
+name: gateplugin
+version: '1.0'
+main: dev.marten_mrfcyt.gateplugin.GatePlugin
+api-version: '1.21'
+prefix: Gates
+load: POSTWORLD
+authors: [ Marten_mrfcyt ]
+description: A gates plugin by Marten_mrfcyt
+dependencies:
+  server:
+    KingdomCraft:
+      load: OMIT
+      required: true
+    WorldEdit:
+      load: OMIT
+      required: true
