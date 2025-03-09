@@ -9,8 +9,11 @@ description: A gates plugin by Marten_mrfcyt
 dependencies:
   server:
     KingdomCraft:
-      load: OMIT
+      load: BEFORE
       required: true
     WorldEdit:
       load: OMIT
       required: true
+    Multiverse-Core:
+      load: BEFORE
+      required: false
