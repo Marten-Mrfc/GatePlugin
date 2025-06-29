@@ -7,9 +7,12 @@ import com.sk89q.worldedit.bukkit.WorldEditPlugin
 import dev.marten_mrfcyt.gateplugin.GatePlugin
 import org.bukkit.Bukkit
 import org.bukkit.Location
+import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
+import kotlin.collections.remove
+import kotlin.text.get
 
 private data class GateData(
     val name: String,
@@ -98,10 +101,8 @@ class GateManager(private val plugin: JavaPlugin) {
         }
         try {
             val gatesData = gson.fromJson(gateFile.readText(), Array<GateData>::class.java).toList()
-            plugin.logger.info("Loaded ${gatesData.size} gates from file")
 
             gatesData.forEach { data ->
-                plugin.logger.info("Loading gate: ${data.name}")
 
                 val world = Bukkit.getWorld(data.location.world) ?: run {
                     plugin.logger.warning("World ${data.location.world} not found for gate ${data.name}")
@@ -135,19 +136,18 @@ class GateManager(private val plugin: JavaPlugin) {
                     attackable = data.attackable,
                     isOpen = data.isOpen
                 )
-                plugin.logger.info("Successfully loaded gate: ${data.name}")
             }
-            plugin.logger.info("Finished loading gates, total: ${gates.size}")
             gatesLoaded = true
         } catch (e: Exception) {
             plugin.logger.warning("Failed to load gates: ${e.message}")
             e.printStackTrace()
         }
     }
-    fun deleteGate(name: String) {
+    fun deleteGate(name: String): Boolean {
+        val gate = gates[name] ?: return false
+        GateDisplayManager(gate, plugin).removeDisplay()
         gates.remove(name)
-        GateDisplayManager(gates[name]!!, plugin).removeDisplay()
-        saveGates()
+        return true
     }
 
     fun saveGates() {

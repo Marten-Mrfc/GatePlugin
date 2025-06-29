@@ -14,7 +14,7 @@ data class Gate(
     val name: String,
     val location: Location,
     private var _currentHealth: Int,
-    val maxHealth: Int,
+    var maxHealth: Int,
     val blocks: Map<Location, BlockData>,
     val kingdom: Kingdom,
     var attackable: Boolean,
@@ -22,9 +22,15 @@ data class Gate(
     var interactionId: UUID? = null,
     var isOpen: Boolean = false
 ) {
+    val tier: Int
+        get() = when {
+            maxHealth <= 60 -> 1
+            maxHealth <= 120 -> 2
+            else -> 3
+    }
     var currentHealth: Int
         get() = _currentHealth
-        private set(value) {
+        set(value) {
             _currentHealth = value.coerceIn(0, maxHealth)
         }
 
@@ -40,6 +46,9 @@ data class Gate(
 
         val previousHealth = currentHealth
         currentHealth -= amount
+        displayId = null
+        displayManager.removeDisplay()
+        displayManager.initDisplay()
         displayManager.updateDisplay()
 
         val damagePercentage = amount.toFloat() / maxHealth
@@ -94,15 +103,47 @@ data class Gate(
         GatePlugin.gateManager.saveGates()
     }
 
-    fun heal(amount: Int) {
-        if (isDestroyed()) return
-        currentHealth += amount
-        displayManager.updateDisplay()
-        GatePlugin.gateManager.saveGates()
-    }
-
     fun reset() {
-        blocks.forEach { (loc, data) -> loc.block.blockData = data }
+        // Play initial repair sound
+        location.world.playSound(location, Sound.BLOCK_ANVIL_USE, 0.8f, 1.2f)
+
+        // Reset blocks with effects
+        blocks.forEach { (loc, data) ->
+            // Schedule block restoration with slight delay for visual effect
+            GatePlugin.instance.server.scheduler.runTaskLater(GatePlugin.instance, Runnable {
+                loc.block.blockData = data
+
+                // Spawn repair particles at each block
+                loc.world.spawnParticle(
+                    Particle.HAPPY_VILLAGER,
+                    loc.clone().add(0.5, 0.5, 0.5),
+                    5, 0.3, 0.3, 0.3, 0.05
+                )
+
+                // Add some block placing effects
+                loc.world.playEffect(loc, Effect.STEP_SOUND, data.material)
+                loc.world.playSound(loc, Sound.BLOCK_STONE_PLACE, 0.2f, 1.0f)
+            }, (Math.random() * 10).toLong())
+        }
+
+        // Central repair effect
+        location.world.spawnParticle(
+            Particle.TOTEM_OF_UNDYING,
+            location.clone().add(0.5, 1.0, 0.5),
+            15, 0.5, 1.0, 0.5, 0.2
+        )
+
+        // Additional effects after short delay
+        GatePlugin.instance.server.scheduler.runTaskLater(GatePlugin.instance, Runnable {
+            location.world.playSound(location, Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.2f)
+            location.world.spawnParticle(
+                Particle.END_ROD,
+                location.clone().add(0.5, 1.5, 0.5),
+                10, 0.5, 0.5, 0.5, 0.1
+            )
+        }, 15L)
+
+        // Update gate state
         displayId = null
         displayManager.removeDisplay()
         displayManager.initDisplay()
@@ -115,7 +156,9 @@ data class Gate(
         val updatedGate = gates[name] ?: return
         this.attackable = updatedGate.attackable
         this._currentHealth = updatedGate.currentHealth
+        displayId = null
         displayManager.removeDisplay()
+        displayManager.initDisplay()
         displayManager.updateDisplay()
         GatePlugin.gateManager.saveGates()
         GatePlugin.instance.logger.info("Gate $name refreshed with updated data")
@@ -147,7 +190,7 @@ data class Gate(
                     val pitch = 0.8f + (index.toFloat() / levelsToRemove.size * 0.4f)
                     location.world.playSound(location, Sound.BLOCK_CHAIN_BREAK, 0.3f, pitch)
                 }
-            }, index * 2L)
+            }, index * 10L)
         }
 
         location.world.playSound(location, Sound.BLOCK_IRON_DOOR_OPEN, 1.0f, 0.8f)

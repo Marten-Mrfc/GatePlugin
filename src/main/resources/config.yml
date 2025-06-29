@@ -1,2 +1,4 @@
 breakItems:
-  - "DIAMOND_SWORD:"
+  - "DIAMOND_SWORD:null:1:10"
+  - "DIAMOND_SWORD:800:3:50"  # Diamond sword with CustomModelData 800, 3 damage, 50 uses
+  - "DIAMOND_SWORD:801:2:30"  # Diamond sword with CustomModelData 801, 2 damage, 30 uses

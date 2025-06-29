@@ -17,3 +17,6 @@ dependencies:
     Multiverse-Core:
       load: BEFORE
       required: false
+    Nexus:
+      load: AFTER
+      required: true

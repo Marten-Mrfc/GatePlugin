@@ -31,8 +31,10 @@ dependencies {
     api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     compileOnly("com.mojang:brigadier:1.0.18")
     compileOnly("com.gufli.kingdomcraft.starter:api:7.1.1")
+    compileOnly("com.sk89q.worldguard:worldguard-bukkit:7.0.13")
     compileOnly("com.sk89q.worldedit:worldedit-bukkit:7.3.10")
     implementation("mlib.api:MLib:0.0.1")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7.1")
 }
 
 val targetJavaVersion = 21
